@@ -1,0 +1,8 @@
+{
+  "name": "live-audio-broadcast",
+  "version": "1.0.0",
+  "main": "signaling-server.js",
+  "dependencies": {
+    "socket.io": "^4.0.0"
+  }
+}
