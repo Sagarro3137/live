@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Live Broadcast</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h2>Live Broadcast (You are the Broadcaster)</h2>
+  <button id="start">Start Broadcasting</button>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let peerConn;
+
+    document.getElementById('start').onclick = async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      socket.emit('broadcaster');
+      socket.on('watcher', id => {
+        peerConn = new RTCPeerConnection();
+        stream.getTracks().forEach(track => peerConn.addTrack(track, stream));
+        peerConn.onicecandidate = e => e.candidate && socket.emit('candidate', id, e.candidate);
+        peerConn.createOffer().then(sdp => peerConn.setLocalDescription(sdp))
+                     .then(() => socket.emit('offer', id, peerConn.localDescription));
+      });
+
+      socket.on('answer', (id, description) => {
+        peerConn.setRemoteDescription(description);
+      });
+
+      socket.on('candidate', (id, candidate) => {
+        peerConn.addIceCandidate(new RTCIceCandidate(candidate));
+      });
+    };
+  </script>
+</body>
+</html>
